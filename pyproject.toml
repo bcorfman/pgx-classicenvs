@@ -1,0 +1,59 @@
+[project]
+name = "PgxClassicEnvs"
+version = "0.1.0"
+description = "Vectorized ConnectFour and TicTacToe examples using JAX"
+authors = [{name = "Brandon Corfman", email = "h9tbgnbbk@privaterelay.appleid.com"}]
+dependencies = [
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ipython>=8.25.0",
+    "pytest>=8.2.2",
+    "pytest-cov>=5.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pgx-classicenvs"]
+
+[tool.yapf]
+column_limit = 100
+indent_dictionary_value = "True"
+allow_split_before_dict_value = "False"
+
+[tool.pytest.ini_options]
+addopts = "--cov-branch --cov-report term --cov=core"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+markers=["unit: Unit tests.",
+         "system: System (browser-based) tests."]
+         
+[tool.coverage.run]
+source = ["core"]
+
+[tool.pylint]
+max-line-length = 100
+disable = [
+    "C0103", # (invalid-name)
+    "C0114", # (missing-module-docstring)
+    "C0115", # (missing-class-docstring)
+    "C0116", # (missing-function-docstring)
+    "C0415", # (import-outside-toplevel)
+    "R0401", # (cyclic-import)
+    "R0902", # (too-many-instance-attributes)
+    "R0903", # (too-few-public-methods)
+    "R0913", # (too-many-arguments)
+    "R0914", # (too-many-locals)
+    "W0105", # (pointless-string-statement)
+]
