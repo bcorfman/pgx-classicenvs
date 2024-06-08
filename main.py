@@ -1,9 +1,4 @@
-from core.hello import hello_world
-
-
-def main():
-    hello_world()
-
+from src.core import play_game
 
 if __name__ == "__main__":
-    main()
+    play_game("tic_tac_toe")

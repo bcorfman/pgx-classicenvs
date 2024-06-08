@@ -5,7 +5,8 @@ description = "Vectorized ConnectFour and TicTacToe examples using JAX"
 authors = [{name = "Brandon Corfman", email = "h9tbgnbbk@privaterelay.appleid.com"}]
 dependencies = [
     "jaxlib>=0.4.28",
-    "flax>=0.8.4",
+    "pgx>=2.0.1",
+    "mctx>=0.0.5",
 ]
 license = "MIT"
 readme = "README.md"
@@ -35,14 +36,14 @@ indent_dictionary_value = "True"
 allow_split_before_dict_value = "False"
 
 [tool.pytest.ini_options]
-addopts = "--cov-branch --cov-report term --cov=core"
+addopts = "--cov-branch --cov-report term --cov=src"
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
 markers=["unit: Unit tests.",
          "system: System (browser-based) tests."]
          
 [tool.coverage.run]
-source = ["core"]
+source = ["src"]
 
 [tool.pylint]
 max-line-length = 100
