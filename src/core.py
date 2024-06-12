@@ -24,7 +24,7 @@ def play_game(id):
         """Return the logits of random policy. -Inf is set to illegal actions."""
         chex.assert_shape(legal_action_mask, (env.num_actions,))
 
-        f_logits = legal_action_mask.as_type(jnp.float32)
+        f_logits = legal_action_mask.astype(jnp.float32)
         logits = jnp.where(legal_action_mask, f_logits, jnp.finfo(f_logits.dtype).min)
         return logits
 
