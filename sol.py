@@ -2,8 +2,6 @@ import os
 
 import solara
 
-from src.core import play_game
-
 move = solara.Reactive(1)
 confirm_disabled = solara.Reactive(False)
 
@@ -26,5 +24,5 @@ def Page():
     solara.Button("Confirm", disabled=confirm_disabled)
 
 
-if __name__ == "__main__":
-    play_game("tic_tac_toe")
+# The following line is required only when running the code in a Jupyter notebook:
+Page()

@@ -7,7 +7,7 @@ dependencies = [
     "jaxlib>=0.4.28",
     "pgx>=2.0.1",
     "mctx>=0.0.5",
-    "tksvg>=0.7.4",
+    "solara>=1.33.0",
 ]
 license = "MIT"
 readme = "README.md"
@@ -31,11 +31,6 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 packages = ["src/pgx-classicenvs"]
 
-[tool.yapf]
-column_limit = 100
-indent_dictionary_value = "True"
-allow_split_before_dict_value = "False"
-
 [tool.pytest.ini_options]
 addopts = "--cov-branch --cov-report term --cov=src"
 testpaths = ["tests"]
@@ -46,18 +41,3 @@ markers=["unit: Unit tests.",
 [tool.coverage.run]
 source = ["src"]
 
-[tool.pylint]
-max-line-length = 100
-disable = [
-    "C0103", # (invalid-name)
-    "C0114", # (missing-module-docstring)
-    "C0115", # (missing-class-docstring)
-    "C0116", # (missing-function-docstring)
-    "C0415", # (import-outside-toplevel)
-    "R0401", # (cyclic-import)
-    "R0902", # (too-many-instance-attributes)
-    "R0903", # (too-few-public-methods)
-    "R0913", # (too-many-arguments)
-    "R0914", # (too-many-locals)
-    "W0105", # (pointless-string-statement)
-]
