@@ -1,28 +1,38 @@
-import os
+from pathlib import Path
 
 import solara
 
-move = solara.Reactive(1)
-confirm_disabled = solara.Reactive(False)
+
+@solara.component
+def InputMove():
+    move, _ = solara.use_state("")
+    confirm_disabled, set_confirm_disabled = solara.use_state(True)
+
+    def update_text(txt):
+        try:
+            set_confirm_disabled(int(txt) < 1 or int(txt) > 9 or txt == "")
+        except ValueError:
+            set_confirm_disabled(True)
+
+    with solara.Row():
+        solara.InputText(
+            "Enter a column 1-9 where to drop your checker",
+            value=move,
+            on_value=update_text,
+            continuous_update=True,
+        )
+        solara.Button("Confirm", disabled=confirm_disabled)
+
+
+@solara.component
+def GameBoard():
+    solara.Image(Path("state.svg"))
 
 
 @solara.component
 def Page():
-    global move
-    solara.Image(os.path.join("state.svg"))
-    solara.InputText(
-        "Enter a column 1-9 where to drop your checker",
-        value=move,
-        continuous_update=True,
-    )
-    try:
-        confirm_disabled = (
-            int(move.value) < 1 or int(move.value) > 9 or move.value == ""
-        )
-    except ValueError:
-        confirm_disabled = True
-    solara.Button("Confirm", disabled=confirm_disabled)
+    GameBoard()
+    InputMove()
 
 
-# The following line is required only when running the code in a Jupyter notebook:
 Page()

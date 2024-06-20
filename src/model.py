@@ -1,5 +1,3 @@
-import os
-import tkinter as tk
 from functools import partial
 from typing import NamedTuple
 
@@ -8,7 +6,6 @@ import jax
 import jax.numpy as jnp
 import mctx
 import pgx
-import solara
 from pgx.experimental import act_randomly
 
 
@@ -20,9 +17,12 @@ class Config(NamedTuple):
 
 
 class RLGame:
-    def __init__(self):
+    def __init__(self, id):
         self.config = Config(env_id=id)
         self.env = pgx.make(self.config.env_id)
+        self.key = None
+        self.state = None
+        self.step_fn = None
 
     def policy_fn(self, legal_action_mask):
         """Return the logits of random policy. -Inf is set to illegal actions."""
@@ -55,8 +55,8 @@ class RLGame:
         del params
         current_player = state.current_player
         state = self.env.step(state, action)
-        logits = self.policy(state.legal_action_mask)
-        value = self.value(rng_key, state)
+        logits = self.policy_fn(state.legal_action_mask)
+        value = self.value_fn(rng_key, state)
         reward = state.rewards[current_player]
         value = jax.lax.select(state.terminated, 0.0, value)
         discount = jax.lax.select(state.terminated, 0.0, -1.0)
@@ -75,7 +75,7 @@ class RLGame:
 
         root = mctx.RootFnOutput(
             prior_logits=jax.vmap(self.policy_fn)(state.legal_action_mask),
-            value=jax.vmap(self.value)(keys, state),
+            value=jax.vmap(self.value_fn)(keys, state),
             embedding=state,
         )
         policy_output = mctx.muzero_policy(
@@ -92,31 +92,33 @@ class RLGame:
         )
         return policy_output
 
-    def vs_human(self, is_human_first=True):
+    def setup_jit(self):
         assert self.config.batch_size == 1
         key = jax.random.PRNGKey(self.config.seed)
         init_fn = jax.jit(jax.vmap(self.env.init))
-        step_fn = jax.jit(jax.vmap(self.env.step))
+        self.step_fn = jax.jit(jax.vmap(self.env.step))
 
-        key, subkey = jax.random.split(key)
+        self.key, subkey = jax.random.split(key)
         keys = jax.random.split(subkey, self.config.batch_size)
-        state: pgx.State = init_fn(keys)
+        self.state: pgx.State = init_fn(keys)
 
-        is_human_turn = is_human_first
-        while True:
-            pgx.save_svg(state, "state.svg")
-            if state.terminated.all():
-                break
-            if is_human_turn:
-                action = int(input("Your action: "))
-                action = jnp.int32([action])
-            else:
-                policy_output = jax.jit(self.run_mcts)(key, state)
-                action = policy_output.action
-            state = step_fn(state, action)
-            is_human_turn = not is_human_turn
-            yield is_human_turn
+    def human_move(self, move):
+        pgx.save_svg(self.state, "state.svg")
+        if self.state.terminated.all():
+            is_terminated = True
+        else:
+            action = jnp.int32([move])
+            self.state = self.step_fn(self.state, action)
+            is_terminated = False
+        return is_terminated
 
-
-def play_game(id):
-    config = Config(env_id=id)
+    def ai_move(self):
+        pgx.save_svg(self.state, "state.svg")
+        if self.state.terminated.all():
+            is_terminated = True
+        else:
+            policy_output = jax.jit(self.run_mcts)(self.key, self.state)
+            action = policy_output.action
+            self.state = self.step_fn(self.state, action)
+            is_terminated = False
+        return is_terminated
