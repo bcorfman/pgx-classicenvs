@@ -1,4 +1,6 @@
-from src.gui import Page
+from nicegui import ui
 
-if __name__ == "__main__":
-    Page()
+import src.gui
+
+if __name__ in {"__main__", "__mp_main__"}:
+    ui.run()

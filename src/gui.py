@@ -1,44 +1,59 @@
-from pathlib import Path
+from nicegui import run, ui
 
-import solara
+from src.model import ai_move, human_move, setup_jit
 
-from src.model import RLGame
-
-human_action = solara.Reactive("")
+setup_jit()
 
 
-@solara.component
-def Page():
-    game_board, set_game_board = solara.use_state(solara.Image(Path("state.svg")))
-    confirm_disabled, set_confirm_disabled = solara.use_state(True)
+class Action:
+    def __init__(self):
+        self.value = ""
 
-    game = RLGame("connect_four")
-    game.setup_jit()
 
-    def update_text(txt):
-        try:
-            set_confirm_disabled(int(txt) < 1 or int(txt) > 9 or txt == "")
-        except ValueError:
-            set_confirm_disabled(True)
+action = Action()
+confirm_btn = None
+img = None
 
-    def on_confirm():
-        is_human_move = True
-        if is_human_move:
-            game_over = game.human_move(int(human_action.value))
-            set_game_board(solara.Image(Path("state.svg")))
-        if game_over:
-            set_confirm_disabled(True)
-            return
-        game_over = game.ai_move()
-        set_game_board(solara.Image(Path("state.svg")))
-        if game_over:
-            set_confirm_disabled(True)
 
-    with solara.Row():
-        solara.InputText(
-            "Enter a column 1-9 where to drop your checker",
-            value=human_action,
-            on_value=update_text,
-            continuous_update=True,
-        )
-        solara.Button("Confirm", on_click=on_confirm, disabled=confirm_disabled)
+@ui.refreshable:
+    img.update()
+
+
+def on_txt_change(e):
+    try:
+        if int(action.value) < 0 or int(action.value) > 6 or action.value == "":
+            confirm_btn.disable()
+        else:
+            confirm_btn.enable()
+    except ValueError:
+        confirm_btn.disable()
+
+
+async def on_confirm():
+    is_human_move = True
+    if is_human_move:
+        confirm_btn.enable()
+        game_over = await run.io_bound(human_move, int(action.value))
+        display_svg.refresh()
+        print("human_move")
+        confirm_btn.disable()
+    if game_over:
+        return
+    game_over = await run.cpu_bound(ai_move)
+    display_svg.refresh()
+    print("ai move")
+    confirm_btn.enable()
+    if game_over:
+        confirm_btn.disable()
+
+
+with ui.row():
+    img = ui.image("state.svg")
+    display_svg()
+    with ui.row():
+        ui.input(
+            label="Enter column 1-9 where to drop your checker",
+            on_change=on_txt_change,
+        ).bind_value(action, "value").style("min-width: 400px; max-width: 400px;")
+        confirm_btn = ui.button("Confirm", on_click=on_confirm)
+        confirm_btn.disable()

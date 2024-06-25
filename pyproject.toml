@@ -7,7 +7,7 @@ dependencies = [
     "jaxlib>=0.4.28",
     "pgx>=2.0.1",
     "mctx>=0.0.5",
-    "solara>=1.33.0",
+    "nicegui>=1.4.27",
 ]
 license = "MIT"
 readme = "README.md"
