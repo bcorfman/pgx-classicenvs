@@ -16,11 +16,19 @@ class Config(NamedTuple):
     batch_size: int = 1
 
 
+HUMAN = 0
+AI = 1
+
 config = None
 env = None
 key = None
 state = None
 step_fn = None
+_player_turn = None
+
+
+def get_player_turn():
+    return _player_turn
 
 
 def policy_fn(legal_action_mask):
@@ -96,9 +104,10 @@ def run_mcts(key, state):
 
 
 def setup_jit():
-    global config, env, key, state, step_fn
+    global config, env, key, state, step_fn, _player_turn
+    _player_turn = HUMAN
     config = Config(env_id="connect_four")
-    pgx.make(config.env_id)
+    env = pgx.make(config.env_id)
     assert config.batch_size == 1
     key = jax.random.PRNGKey(config.seed)
     init_fn = jax.jit(jax.vmap(env.init))
@@ -110,24 +119,22 @@ def setup_jit():
     pgx.save_svg(state, "state.svg")
 
 
-def human_move(self, move):
-    pgx.save_svg(self.state, "state.svg")
-    if self.state.terminated.all():
-        is_terminated = True
-    else:
-        action = jnp.int32([move])
-        self.state = self.step_fn(self.state, action)
-        is_terminated = False
+def human_move(move):
+    global state, step_fn, _player_turn
+    action = jnp.int32([move])
+    state = step_fn(state, action)
+    is_terminated = state.terminated.all()
+    pgx.save_svg(state, "state.svg")
+    _player_turn = 1 - _player_turn
     return is_terminated
 
 
-def ai_move(self):
-    pgx.save_svg(self.state, "state.svg")
-    if self.state.terminated.all():
-        is_terminated = True
-    else:
-        policy_output = jax.jit(self.run_mcts)(self.key, self.state)
-        action = policy_output.action
-        self.state = self.step_fn(self.state, action)
-        is_terminated = False
+def ai_move():
+    global state, key, step_fn, _player_turn
+    policy_output = jax.jit(run_mcts)(key, state)
+    action = policy_output.action
+    state = step_fn(state, action)
+    is_terminated = state.terminated.all()
+    pgx.save_svg(state, "state.svg")
+    _player_turn = 1 - _player_turn
     return is_terminated

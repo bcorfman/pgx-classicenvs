@@ -1,6 +1,6 @@
 from nicegui import run, ui
 
-from src.model import ai_move, human_move, setup_jit
+from src.model import HUMAN, ai_move, get_player_turn, human_move, setup_jit
 
 setup_jit()
 
@@ -15,7 +15,10 @@ confirm_btn = None
 img = None
 
 
-@ui.refreshable:
+@ui.refreshable
+def display_svg():
+    img = ui.image("state.svg")
+    img.force_reload()
     img.update()
 
 
@@ -30,25 +33,25 @@ def on_txt_change(e):
 
 
 async def on_confirm():
-    is_human_move = True
-    if is_human_move:
+    game_over = False
+    if get_player_turn() == HUMAN:
         confirm_btn.enable()
-        game_over = await run.io_bound(human_move, int(action.value))
+        game_over = human_move(int(action.value))
         display_svg.refresh()
         print("human_move")
         confirm_btn.disable()
     if game_over:
+        print("game over")
         return
-    game_over = await run.cpu_bound(ai_move)
-    display_svg.refresh()
+    game_over = ai_move()
     print("ai move")
+    display_svg.refresh()
     confirm_btn.enable()
     if game_over:
         confirm_btn.disable()
 
 
 with ui.row():
-    img = ui.image("state.svg")
     display_svg()
     with ui.row():
         ui.input(
