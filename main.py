@@ -1,4 +1,7 @@
-from src.core import play_game
+from nicegui import ui
 
-if __name__ == "__main__":
-    play_game("tic_tac_toe")
+from src.gui import setup_jit
+
+if __name__ in {"__main__", "__mp_main__"}:
+    setup_jit()
+    ui.run()

@@ -144,3 +144,6 @@ cython_debug/
 
 # Mac files
 .DS_Store
+
+# pic on disk used for display purposes
+state.svg
