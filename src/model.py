@@ -19,8 +19,8 @@ class Config(NamedTuple):
 HUMAN = 0
 AI = 1
 
-config = None
-env = None
+config = Config(env_id="connect_four")
+env = pgx.make(config.env_id)
 key = None
 state = None
 step_fn = None
@@ -104,11 +104,8 @@ def run_mcts(key, state):
 
 
 def setup_jit():
-    global config, env, key, state, step_fn, _player_turn
+    global config, key, state, step_fn, _player_turn
     _player_turn = HUMAN
-    config = Config(env_id="connect_four")
-    env = pgx.make(config.env_id)
-    assert config.batch_size == 1
     key = jax.random.PRNGKey(config.seed)
     init_fn = jax.jit(jax.vmap(env.init))
     step_fn = jax.jit(jax.vmap(env.step))
